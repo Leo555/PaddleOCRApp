@@ -42,7 +42,7 @@ npm run preview  # 本地预览生产构建
 
 ## 部署到 Vercel
 
-> 仓库已配置 GitHub Actions（`.github/workflows/deploy-web.yml`）：push 到 `main`/`master` 且涉及 `ocr_web/` 变更时会**自动部署到 Vercel 生产环境**。需在仓库 Secrets 配置 `VERCEL_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID`，详见根 README。以下为手动/初次接入方式。
+> 推荐用 **Vercel 的 Git 集成**：在 Vercel Dashboard 导入本仓库并接好 GitHub 后，push 到主分支会**自动构建并部署到生产环境**，无需 GitHub Actions、也无需配置任何 Token。
 
 本目录已自带 `vercel.json`（framework=vite，输出 `dist`）。两种方式：
 

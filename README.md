@@ -70,8 +70,5 @@ cd ocr_web && npm install && npm run dev
 
 | 流水线 | 触发 | 作用 |
 |--------|------|------|
-| `deploy-web.yml` | push 到 `main`/`master`（含 `ocr_web/` 变更） | 用 Vercel CLI 自动构建并部署 Web 端到生产环境 |
 | `build-app.yml` | 每次 push | 用 PyInstaller 在 macOS(arm64) / Windows / Linux 上打包桌面客户端，上传为 Actions Artifacts |
 | `build-app.yml` | push tag `v*` | 额外发布到 **GitHub Releases**，供下载页固定直链使用 |
-
-首次需配置：Vercel 部署 Secrets（`VERCEL_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID`，Root Directory 设为 `ocr_web`）、Web 端环境变量 `VITE_GITHUB_REPO=你的/仓库`。完整说明见各子项目 README。
