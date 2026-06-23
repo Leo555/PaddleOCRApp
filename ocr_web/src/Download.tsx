@@ -67,6 +67,20 @@ export default function Download({ onBack }: { onBack: () => void }) {
   const [tag, setTag] = useState<string | null>(null);
   // 资产名 -> 下载地址与大小（来自 GitHub API，最准确）。
   const [assets, setAssets] = useState<Record<string, AssetInfo>>({});
+  // 待二次确认的下载项；为 null 时不显示确认弹窗。
+  const [pending, setPending] = useState<{ title: string; asset: string; url: string; size?: number } | null>(null);
+
+  // 用户在确认弹窗中点「确认下载」：以临时 <a> 触发下载，避免离开当前页面。
+  function confirmDownload() {
+    if (!pending) return;
+    const a = document.createElement('a');
+    a.href = pending.url;
+    a.rel = 'noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setPending(null);
+  }
 
   useEffect(() => {
     setOs(detectOS());
@@ -187,7 +201,10 @@ export default function Download({ onBack }: { onBack: () => void }) {
                 className={`dl-card ${isRec ? 'rec' : ''} ${clickable ? '' : 'disabled'}`}
                 href={clickable ? r.url : undefined}
                 onClick={(e) => {
-                  if (!clickable) e.preventDefault();
+                  // 拦截默认跳转，先弹出二次确认；确认后再真正下载。
+                  e.preventDefault();
+                  if (!clickable || !r.url) return;
+                  setPending({ title: b.title, asset: b.asset, url: r.url, size: r.size });
                 }}
               >
                 {isRec && <span className="dl-rec-tag">推荐</span>}
@@ -266,6 +283,28 @@ export default function Download({ onBack }: { onBack: () => void }) {
           。
         </p>
       </main>
+
+      {pending && (
+        <div className="modal-mask" onClick={() => setPending(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-title">确认下载</div>
+            <div className="modal-body">
+              即将下载 <strong>{pending.title}</strong> 客户端
+              {pending.size ? `（${formatSize(pending.size)}）` : ''}：
+              <br />
+              <code>{pending.asset}</code>
+              <br />
+              文件来自 GitHub Releases，请确认后开始下载。
+            </div>
+            <div className="modal-actions">
+              <button onClick={() => setPending(null)}>取消</button>
+              <button className="primary" onClick={confirmDownload}>
+                确认下载
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

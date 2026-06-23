@@ -1,59 +1,77 @@
 # PaddleOCR 工具集
 
-基于 [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) 的 PP-OCR 模型构建的 OCR 工具集（中文 / 英文 / 数字）。本仓库是一个 monorepo，包含两种形态，分别是两个**独立、自包含**的子项目，各自拥有独立的 README：
+一款免费、开源的文字识别（OCR）工具，能把**图片和 PDF 里的文字提取成可编辑文本**，支持**中文 / 英文 / 数字**。
 
-| 形态 | 目录 | 技术栈 | 推理位置 | 适用场景 | 文档 |
-|------|------|--------|----------|----------|------|
-| **桌面客户端** | [`ocr_app/`](ocr_app) | Python + PySide6 + RapidOCR(ONNX) | 本地 Python 进程 | 本机离线、截图取词、PDF | [ocr_app/README.md](ocr_app/README.md) |
-| **Web 在线应用** | [`ocr_web/`](ocr_web) | Vite + React + PaddleJS(WebGL) | **用户浏览器内** | 纯前端、零后端、可部署 Vercel | [ocr_web/README.md](ocr_web/README.md) |
+提供两种使用形态，能力一致，按需选用：
 
-两端共享同一套 PP-OCR 模型能力。Web 端推理完全在浏览器本地完成，图片不上传服务器，部署只需托管静态文件。
+- 🌐 **网页版**——打开浏览器即用，无需安装
+- 💻 **桌面客户端**——macOS / Windows / Linux，可离线使用
 
-## 快速开始
+> 🔒 **隐私优先**：无论网页版还是客户端，图片与 PDF 都**只在你本机处理，不上传任何服务器**。
 
-**桌面客户端**（详见 [`ocr_app/README.md`](ocr_app/README.md)）：
+## 能做什么
+
+- 📷 **多种导入方式**：打开本地图片 / PDF、直接拖拽、粘贴剪贴板截图（客户端还支持框选截图识别）
+- 📄 **支持 PDF**：自动逐页渲染，可翻页识别，扫描件 / 图片型 PDF 同样适用
+- ✍️ **结果可编辑**：识别文本可直接修改、一键复制，导出 **TXT / JSON**
+- 🟩 **检测框可视化**：在原图上叠加文字检测框，识别区域一目了然（可开关）
+- 🈶 **中英数混排**：基于百度 [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) 的 PP-OCR 模型，开箱即用
+
+## 如何使用
+
+### 方式一：网页版（最简单）
+
+打开网页即可使用，免安装、免登录。识别在浏览器本地完成，首次打开会自动下载模型（数 MB），之后会被缓存。
+
+> 详见 [`ocr_web/README.md`](ocr_web/README.md)。
+
+### 方式二：桌面客户端（可离线）
+
+在网页版的「下载客户端」页（`/#/download`）会**自动识别你的系统并推荐对应安装包**，下载后即可运行：
+
+| 系统 | 安装包 |
+|------|--------|
+| macOS（Apple Silicon） | `PaddleOCRApp-macos-arm64.zip` |
+| Windows | `PaddleOCRApp-windows.zip` |
+| Linux | `PaddleOCRApp-linux.tar.gz` |
+
+客户端自带识别模型，**装好后无需联网也能使用**。
+
+> 详见 [`ocr_app/README.md`](ocr_app/README.md)。
+
+## 意见反馈
+
+使用中遇到问题或有功能建议，欢迎通过网页 / 客户端内的「意见反馈」入口，或直接到 [GitHub Issues](https://github.com/Leo555/PaddleOCRApp/issues/new) 反馈。
+
+---
+
+## 面向开发者
+
+本仓库是一个 monorepo，包含两个**独立、自包含**的子项目，各自拥有完整文档：
+
+| 形态 | 目录 | 技术栈 | 推理位置 | 文档 |
+|------|------|--------|----------|------|
+| 桌面客户端 | [`ocr_app/`](ocr_app) | Python + PySide6 + RapidOCR(ONNX) | 本地 Python 进程 | [ocr_app/README.md](ocr_app/README.md) |
+| Web 在线应用 | [`ocr_web/`](ocr_web) | Vite + React + PaddleJS(WebGL) | 用户浏览器内 | [ocr_web/README.md](ocr_web/README.md) |
+
+### 本地运行
 
 ```bash
-bash ocr_app/run.sh   # 一键创建虚拟环境、安装依赖并启动
-```
+# 桌面客户端：一键创建虚拟环境、安装依赖并启动
+bash ocr_app/run.sh
 
-**Web 在线应用**（详见 [`ocr_web/README.md`](ocr_web/README.md)）：
-
-```bash
+# Web 在线应用
 cd ocr_web && npm install && npm run dev
 ```
 
-## 项目结构
+### 持续集成与发布
 
-```
-ocr/
-├── README.md               # 仓库总览（本文件）
-├── .github/workflows/      # CI/CD 流水线
-│   ├── deploy-web.yml      # push 主分支 → 自动部署 ocr_web 到 Vercel
-│   └── build-app.yml       # 每次 push → 多平台打包 ocr_app；打 tag → 发布 Release
-├── ocr_app/                # 桌面客户端子项目（Python + PySide6）
-│   └── README.md           # 桌面端独立文档
-└── ocr_web/                # Web 在线应用子项目（Vite + React + PaddleJS）
-    └── README.md           # Web 端独立文档
-```
-
-各子项目的功能说明、环境要求、安装运行、部署方式与注意事项，请参阅对应目录下的 README。
-
-## 持续集成与发布（CI/CD）
-
-仓库托管到 GitHub 后，`.github/workflows/` 下的流水线自动生效：
+`.github/workflows/` 下的流水线托管到 GitHub 后自动生效：
 
 | 流水线 | 触发 | 作用 |
 |--------|------|------|
 | `deploy-web.yml` | push 到 `main`/`master`（含 `ocr_web/` 变更） | 用 Vercel CLI 自动构建并部署 Web 端到生产环境 |
-| `build-app.yml` | 每次 push | 用 PyInstaller 在 macOS(arm64/x64) / Windows / Linux 上打包桌面客户端，产物作为 Actions Artifacts 上传（可下载） |
-| `build-app.yml` | push tag `v*` | 在上一步基础上额外发布到 **GitHub Releases**，供 Web 下载页的固定直链直接下载 |
+| `build-app.yml` | 每次 push | 用 PyInstaller 在 macOS(arm64) / Windows / Linux 上打包桌面客户端，上传为 Actions Artifacts |
+| `build-app.yml` | push tag `v*` | 额外发布到 **GitHub Releases**，供下载页固定直链使用 |
 
-**首次需配置：**
-
-1. **Vercel 部署** — 在仓库 `Settings → Secrets and variables → Actions` 添加：
-   `VERCEL_TOKEN`、`VERCEL_ORG_ID`、`VERCEL_PROJECT_ID`（后两者可在 `ocr_web` 下执行 `npx vercel link` 后于 `.vercel/project.json` 获得）。Vercel 项目的 **Root Directory 须设为 `ocr_web`**。
-2. **下载页链接** — 给 Web 端配置环境变量 `VITE_GITHUB_REPO=你的/仓库`（Vercel 项目 Environment Variables 中添加），下载页才能拼出 Release 直链。
-3. **发布正式版** — 打 tag 触发 Release：`git tag v0.1.0 && git push --tags`。日常 push 的产物只在 Actions 页可下载（需登录 GitHub），下载页面向公网用户的链接指向 Release。
-
-> Web 端「下载客户端」页（`/#/download`）会根据访问者系统自动推荐对应平台的安装包，详见 [`ocr_web/README.md`](ocr_web/README.md)。
+首次需配置：Vercel 部署 Secrets（`VERCEL_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID`，Root Directory 设为 `ocr_web`）、Web 端环境变量 `VITE_GITHUB_REPO=你的/仓库`。完整说明见各子项目 README。
