@@ -18,6 +18,7 @@ interface Build {
 // 桌面客户端各平台构建包。顺序即页面展示顺序。
 const BUILDS: Build[] = [
   { asset: 'PaddleOCRApp-macos-arm64.zip', os: 'mac', title: 'macOS · Apple Silicon', hint: 'M1/M2/M3 等 Apple 芯片' },
+  { asset: 'PaddleOCRApp-macos-x64.zip', os: 'mac', title: 'macOS · Intel', hint: 'Intel 芯片的 Mac' },
   { asset: 'PaddleOCRApp-windows-x64.zip', os: 'windows', title: 'Windows', hint: '64 位 Windows 10/11' },
   { asset: 'PaddleOCRApp-linux-x64.tar.gz', os: 'linux', title: 'Linux', hint: '64 位主流发行版' },
 ];

@@ -32,6 +32,7 @@
 | 系统 | 安装包 |
 |------|--------|
 | macOS（Apple Silicon） | `PaddleOCRApp-macos-arm64.zip` |
+| macOS（Intel） | `PaddleOCRApp-macos-x64.zip` |
 | Windows | `PaddleOCRApp-windows.zip` |
 | Linux | `PaddleOCRApp-linux.tar.gz` |
 
@@ -70,5 +71,5 @@ cd ocr_web && npm install && npm run dev
 
 | 流水线 | 触发 | 作用 |
 |--------|------|------|
-| `build-app.yml` | 每次 push | 用 PyInstaller 在 macOS(arm64) / Windows / Linux 上打包桌面客户端，上传为 Actions Artifacts |
+| `build-app.yml` | 每次 push | 用 PyInstaller 在 macOS(arm64/x64) / Windows / Linux 上打包桌面客户端，上传为 Actions Artifacts |
 | `build-app.yml` | push tag `v*` | 额外发布到 **GitHub Releases**，供下载页固定直链使用 |
