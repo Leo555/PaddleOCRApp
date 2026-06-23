@@ -16,7 +16,7 @@
 
 ## 客户端下载页
 
-工具栏「下载客户端」进入 `/#/download`，页面会探测访问者操作系统（及 Mac 的 Apple Silicon / Intel 架构）并高亮推荐对应的桌面客户端安装包，同时列出全部平台。
+工具栏「下载客户端」进入 `/#/download`，页面会探测访问者操作系统并高亮推荐对应的桌面客户端安装包，同时列出全部平台（macOS Apple Silicon / Windows / Linux）。
 
 下载链接指向 GitHub Releases 的最新版本固定直链，因此需配置仓库 slug：
 

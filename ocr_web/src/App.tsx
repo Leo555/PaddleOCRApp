@@ -496,7 +496,17 @@ export default function App() {
         </section>
       </main>
 
-      <footer className="statusbar">{status}</footer>
+      <footer className="statusbar">
+        <span>{status}</span>
+        <a
+          className="feedback-link"
+          href="https://github.com/Leo555/PaddleOCRApp/issues/new"
+          target="_blank"
+          rel="noreferrer"
+        >
+          意见反馈
+        </a>
+      </footer>
 
       {pwdPrompt && (
         <div className="modal-mask" onMouseDown={cancelPassword}>

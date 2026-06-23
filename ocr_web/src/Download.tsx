@@ -18,7 +18,6 @@ interface Build {
 // 桌面客户端各平台构建包。顺序即页面展示顺序。
 const BUILDS: Build[] = [
   { asset: 'PaddleOCRApp-macos-arm64.zip', os: 'mac', title: 'macOS · Apple Silicon', hint: 'M1/M2/M3 等 Apple 芯片' },
-  { asset: 'PaddleOCRApp-macos-x64.zip', os: 'mac', title: 'macOS · Intel', hint: 'Intel 芯片的 Mac' },
   { asset: 'PaddleOCRApp-windows-x64.zip', os: 'windows', title: 'Windows', hint: '64 位 Windows 10/11' },
   { asset: 'PaddleOCRApp-linux-x64.tar.gz', os: 'linux', title: 'Linux', hint: '64 位主流发行版' },
 ];
@@ -60,8 +59,6 @@ interface AssetInfo {
 
 export default function Download({ onBack }: { onBack: () => void }) {
   const [os, setOs] = useState<OS>('unknown');
-  // 是否为 Apple Silicon：通过高熵 UA 数据异步探测，失败则默认推荐 arm64（近年新机为主）。
-  const [appleArm, setAppleArm] = useState<boolean | null>(null);
 
   // 最新 Release 信息。
   const [releaseState, setReleaseState] = useState<ReleaseState>(
@@ -73,13 +70,6 @@ export default function Download({ onBack }: { onBack: () => void }) {
 
   useEffect(() => {
     setOs(detectOS());
-    const uaData = (navigator as any).userAgentData;
-    if (uaData?.getHighEntropyValues) {
-      uaData
-        .getHighEntropyValues(['architecture'])
-        .then((v: { architecture?: string }) => setAppleArm(v.architecture === 'arm'))
-        .catch(() => setAppleArm(null));
-    }
   }, []);
 
   // 查询最新 Release：拿到真实存在的资产、版本号与文件大小。
@@ -121,12 +111,9 @@ export default function Download({ onBack }: { onBack: () => void }) {
   const recommended = useMemo<string | null>(() => {
     if (os === 'windows') return 'PaddleOCRApp-windows-x64.zip';
     if (os === 'linux') return 'PaddleOCRApp-linux-x64.tar.gz';
-    if (os === 'mac') {
-      // 明确探测到 Intel 才推荐 x64，否则默认 Apple Silicon。
-      return appleArm === false ? 'PaddleOCRApp-macos-x64.zip' : 'PaddleOCRApp-macos-arm64.zip';
-    }
+    if (os === 'mac') return 'PaddleOCRApp-macos-arm64.zip';
     return null;
-  }, [os, appleArm]);
+  }, [os]);
 
   const osLabel =
     os === 'mac' ? 'macOS' : os === 'windows' ? 'Windows' : os === 'linux' ? 'Linux' : '未知系统';
@@ -266,6 +253,18 @@ export default function Download({ onBack }: { onBack: () => void }) {
             </li>
           </ul>
         </details>
+
+        <p className="dl-foot">
+          有问题或建议？欢迎{' '}
+          <a
+            href="https://github.com/Leo555/PaddleOCRApp/issues/new"
+            target="_blank"
+            rel="noreferrer"
+          >
+            意见反馈
+          </a>
+          。
+        </p>
       </main>
     </div>
   );

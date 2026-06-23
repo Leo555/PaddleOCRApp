@@ -155,6 +155,15 @@ class MainWindow(QMainWindow):
         self.status = self.statusBar()
         self.status.showMessage("正在后台加载 OCR 模型…")
 
+        # 状态栏右侧常驻「意见反馈」链接，点击用系统浏览器打开 GitHub issues。
+        feedback = QLabel(
+            '<a href="https://github.com/Leo555/PaddleOCRApp/issues/new" '
+            'style="color:#3fb950; text-decoration:none;">意见反馈</a>'
+        )
+        feedback.setOpenExternalLinks(True)
+        feedback.setToolTip("有问题或建议？欢迎反馈")
+        self.status.addPermanentWidget(feedback)
+
         # 信号
         self.btn_open.clicked.connect(self.on_open)
         self.btn_paste.clicked.connect(self.on_paste)

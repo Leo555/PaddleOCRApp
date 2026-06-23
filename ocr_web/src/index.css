@@ -266,10 +266,22 @@ button.primary:disabled {
 
 /* 状态栏 */
 .statusbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 8px 14px;
   border-top: 1px solid var(--border);
   color: var(--muted);
   font-size: 13px;
+}
+.feedback-link {
+  margin-left: auto;
+  color: var(--green);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.feedback-link:hover {
+  text-decoration: underline;
 }
 
 /* 加密 PDF 密码弹窗 */
