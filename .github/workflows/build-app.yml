@@ -1,19 +1,17 @@
 name: Build Desktop App
 
 # 用 PyInstaller 把 ocr_app 打成各平台的可下载客户端包：
-#   - 日常 push：产物作为 workflow Artifacts 上传（在 Actions 运行页可下载，需登录 GitHub）。
-#   - 打 tag（v*）：build 全部成功后，由独立的 release job 统一发布到 GitHub Releases，
+#   - 打 tag（v*）：自动构建，build 全部成功后由独立的 release job 统一发布到 GitHub Releases，
 #     供下载页的 latest 固定链接直接下载（公网可用），并附带 SHA256SUMS.txt 校验文件。
+#   - 手动触发（workflow_dispatch）：需要临时验证打包时在 Actions 页面点 Run workflow，
+#     产物仅作为 workflow Artifacts 上传（不发布 Release）。
 #
+# 说明：app 构建跨 4 平台、耗时较长，故不在日常 push 自动跑；发版只走 tag，平时验证靠手动触发。
 # 产出的资产名与 ocr_web 下载页(src/Download.tsx)中的常量保持一致，改名需同步两处。
 
 on:
   push:
-    branches: [main, master]
     tags: ['v*']
-    paths:
-      - 'ocr_app/**'
-      - '.github/workflows/build-app.yml'
   workflow_dispatch: {}
 
 jobs:
