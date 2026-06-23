@@ -77,6 +77,7 @@ ocr_app/
 ├── README.md
 ├── ocr_app/                # Python 包
 │   ├── __main__.py         # 入口（python -m ocr_app）
+│   ├── assets/             # 应用图标（icon.png / icon.icns / icon.ico / logo-1024.png）
 │   ├── engine.py           # OCR 引擎封装：懒加载 / 结果解析（后端 RapidOCR）
 │   ├── worker.py           # QThread 后台 worker（预热 + 识别）
 │   ├── image_view.py       # 图片显示控件：拖拽 / 缩放 / 检测框叠加
@@ -85,6 +86,8 @@ ocr_app/
 │   └── main_window.py      # 主窗口 GUI
 ├── launcher.py             # PyInstaller 打包入口（绝对导入调用 main）
 ├── ocr_app.spec            # PyInstaller 打包配置
+├── scripts/
+│   └── make_icons.py       # 用 Pillow 生成应用图标（单一来源）
 ├── smoke_test.py           # 无界面冒烟测试
 ├── requirements.txt
 └── run.sh

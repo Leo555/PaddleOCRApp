@@ -16,7 +16,19 @@
 """
 from PyInstaller.utils.hooks import collect_all
 
-datas = []
+import os
+import sys
+
+# 应用图标资源（由 scripts/make_icons.py 生成）：
+# - icon.png  随包分发，运行时 setWindowIcon 使用（跨平台）
+# - icon.icns macOS .app 图标；icon.ico Windows 可执行图标
+ASSETS = os.path.join("ocr_app", "assets")
+ICON_ICNS = os.path.join(ASSETS, "icon.icns")
+ICON_ICO = os.path.join(ASSETS, "icon.ico")
+# EXE 的 icon 仅 Windows 用 .ico；macOS 由下方 BUNDLE 用 .icns，Linux 无图标。
+exe_icon = ICON_ICO if sys.platform.startswith("win") else None
+
+datas = [(os.path.join(ASSETS, "icon.png"), ASSETS)]
 binaries = []
 hiddenimports = ["fitz"]
 
@@ -53,6 +65,7 @@ exe = EXE(
     strip=False,
     upx=False,
     console=False,  # GUI 应用，不弹控制台
+    icon=exe_icon,
 )
 
 coll = COLLECT(
@@ -68,7 +81,7 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name="PaddleOCRApp.app",
-    icon=None,
+    icon=ICON_ICNS,
     bundle_identifier="com.ocr.paddleocrapp",
     info_plist={
         "CFBundleName": "PaddleOCRApp",

@@ -8,7 +8,7 @@ from typing import Optional, Union
 
 import numpy as np
 from PySide6.QtCore import QEvent, Qt, QTimer
-from PySide6.QtGui import QGuiApplication, QImage, QKeySequence, QPixmap, QShortcut
+from PySide6.QtGui import QGuiApplication, QIcon, QImage, QKeySequence, QPixmap, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -34,10 +34,22 @@ from .screen_capture import ScreenCaptureOverlay
 from .worker import OcrWorker, WarmupWorker
 
 
+def app_icon() -> QIcon:
+    """应用图标。
+
+    图标随包一起分发在 `ocr_app/assets/icon.png`，开发运行与 PyInstaller
+    打包后该相对结构均保持不变，因此直接以 __file__ 定位即可，无需区分
+    sys._MEIPASS。文件缺失时返回空 QIcon（不影响功能）。
+    """
+    path = os.path.join(os.path.dirname(__file__), "assets", "icon.png")
+    return QIcon(path) if os.path.exists(path) else QIcon()
+
+
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("PaddleOCRApp")
+        self.setWindowIcon(app_icon())
         self.resize(1100, 720)
 
         self.engine = OcrEngine(lang="ch")
