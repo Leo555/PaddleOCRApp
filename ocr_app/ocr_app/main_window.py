@@ -4,10 +4,11 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from typing import Optional
+from typing import Optional, Union
 
+import numpy as np
 from PySide6.QtCore import QEvent, Qt, QTimer
-from PySide6.QtGui import QGuiApplication, QKeySequence, QPixmap, QShortcut
+from PySide6.QtGui import QGuiApplication, QImage, QKeySequence, QPixmap, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -40,7 +41,11 @@ class MainWindow(QMainWindow):
         self.resize(1100, 720)
 
         self.engine = OcrEngine(lang="ch")
+        # 当前待识别的图像来源：文件路径（打开文件 / PDF 渲染页）或内存中的
+        # BGR ndarray（粘贴 / 截图）。两者互斥，on_ocr 优先使用内存图像。
+        # 粘贴 / 截图走内存图像，可避免主线程「PNG 编码写盘 + 读盘解码」的卡顿。
         self._current_image_path: Optional[str] = None
+        self._current_image: Optional[np.ndarray] = None
         self._temp_files: list[str] = []
         self._last_result: Optional[OcrResult] = None
         self._ocr_worker: Optional[OcrWorker] = None
@@ -273,14 +278,11 @@ class MainWindow(QMainWindow):
         clipboard = QGuiApplication.clipboard()
 
         # 1) 剪贴板里是位图像素数据（系统截图 ⌘⇧⌃4 / 从图片编辑器复制选区）。
+        #    直接用内存图像显示并识别，不在主线程做 PNG 编码写盘，避免卡顿。
         image = clipboard.image()
         if not image.isNull():
-            path = self._dump_temp_png(QPixmap.fromImage(image))
-            if path:
-                self._reset_pdf_state()
-                self.load_image(path, auto_ocr=True)
-            else:
-                self.status.showMessage("保存剪贴板图片失败。", 4000)
+            self._reset_pdf_state()
+            self.load_qimage(image, auto_ocr=True)
             return
 
         # 2) 剪贴板里是文件引用（在 Finder/浏览器中"复制图片文件"）：取本地图片路径。
@@ -304,12 +306,51 @@ class MainWindow(QMainWindow):
             return tmp.name
         return None
 
+    def load_qimage(self, image: QImage, auto_ocr: bool = False) -> None:
+        """从内存 QImage 直接载入（粘贴 / 截图）。
+
+        全程不落盘：UI 立即用内存 QPixmap 显示，识别时把图像转成 BGR ndarray
+        交给后台线程。这样粘贴动作在主线程瞬间完成，不会因大图 PNG 编码而卡顿。
+        """
+        if image.isNull():
+            self.status.showMessage("剪贴板里没有可识别的图片。", 4000)
+            return
+        pixmap = QPixmap.fromImage(image)
+        self._current_image_path = None
+        self._current_image = self._qimage_to_bgr(image)
+        self.image_view.set_pixmap(pixmap)
+        self.text_edit.clear()
+        self._last_result = None
+        self.status.showMessage(
+            f"已载入剪贴板图片（{pixmap.width()}×{pixmap.height()}）"
+        )
+        if auto_ocr:
+            self.on_ocr()
+
+    @staticmethod
+    def _qimage_to_bgr(image: QImage) -> np.ndarray:
+        """QImage -> 连续的 BGR uint8 ndarray。
+
+        与「保存为无损 PNG 后再用 cv2 读取」逐像素等价（RapidOCR 对 3 通道
+        ndarray 按 BGR 处理），因此识别质量与原落盘方案完全一致，只是省去了
+        主线程的 PNG 编码与磁盘往返。
+        """
+        img = image.convertToFormat(QImage.Format.Format_RGB888)
+        w, h = img.width(), img.height()
+        bytes_per_line = img.bytesPerLine()
+        buf = np.frombuffer(img.constBits(), dtype=np.uint8)
+        # 按实际行字节数还原，再裁掉行尾对齐填充，得到紧凑的 RGB。
+        rgb = buf.reshape((h, bytes_per_line))[:, : w * 3].reshape((h, w, 3))
+        # RGB -> BGR，并保证内存连续，供 onnxruntime 安全读取。
+        return np.ascontiguousarray(rgb[:, :, ::-1])
+
     def load_image(self, path: str, auto_ocr: bool = False) -> None:
         pixmap = QPixmap(path)
         if pixmap.isNull():
             QMessageBox.warning(self, "无法打开", f"无法加载图片：\n{path}")
             return
         self._current_image_path = path
+        self._current_image = None
         self.image_view.set_pixmap(pixmap)
         self.text_edit.clear()
         self._last_result = None
@@ -368,6 +409,7 @@ class MainWindow(QMainWindow):
             self.status.showMessage("渲染 PDF 页失败。", 4000)
             return
         self._current_image_path = png
+        self._current_image = None
         self.image_view.set_pixmap(pixmap)
         self.text_edit.clear()
         self._last_result = None
@@ -435,12 +477,9 @@ class MainWindow(QMainWindow):
         self.showNormal()
         self.raise_()
         self.activateWindow()
-        path = self._dump_temp_png(pixmap)
-        if path:
-            self._reset_pdf_state()
-            self.load_image(path, auto_ocr=True)
-        else:
-            self.status.showMessage("保存截图失败。", 4000)
+        # 截图同样走内存图像，避免主线程 PNG 编码写盘造成卡顿。
+        self._reset_pdf_state()
+        self.load_qimage(pixmap.toImage(), auto_ocr=True)
 
     def _on_capture_cancelled(self) -> None:
         self._overlay = None
@@ -452,7 +491,13 @@ class MainWindow(QMainWindow):
     # ---------------------------------------------------------------- #
     # 识别
     def on_ocr(self) -> None:
-        if not self._current_image_path:
+        # 内存图像（粘贴 / 截图）优先；否则用文件路径（打开文件 / PDF 页）。
+        # 注意 ndarray 不能用布尔真值判断，必须显式与 None 比较。
+        if self._current_image is not None:
+            source: Union[str, np.ndarray] = self._current_image
+        elif self._current_image_path:
+            source = self._current_image_path
+        else:
             self.status.showMessage("请先打开或粘贴一张图片。", 4000)
             return
         if self._ocr_worker and self._ocr_worker.isRunning():
@@ -461,7 +506,7 @@ class MainWindow(QMainWindow):
         self.btn_ocr.setText("识别中…")
         self.status.showMessage("正在识别…")
 
-        self._ocr_worker = OcrWorker(self.engine, self._current_image_path)
+        self._ocr_worker = OcrWorker(self.engine, source)
         self._ocr_worker.done.connect(self._on_ocr_done)
         self._ocr_worker.failed.connect(self._on_ocr_failed)
         self._ocr_worker.start()
