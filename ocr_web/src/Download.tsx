@@ -160,7 +160,6 @@ export default function Download({ onBack }: { onBack: () => void }) {
   return (
     <div className="download">
       <header className="toolbar">
-        <h1 className="title">下载桌面客户端</h1>
         <button onClick={onBack}>← 返回在线 OCR</button>
         <span className="spacer" />
         {versionBadge && <span className="badge">{versionBadge}</span>}

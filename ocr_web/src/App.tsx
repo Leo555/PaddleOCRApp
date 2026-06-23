@@ -456,6 +456,18 @@ export default function App() {
         >
           {hasSource ? (
             <canvas ref={canvasRef} className="canvas" />
+          ) : modelState === 'loading' ? (
+            // 模型就绪前在画布区展示 loading：首次需从 CDN 下载约十几 MB 模型，
+            // 没有提示用户会以为页面卡住。
+            <div className="placeholder loading-box">
+              <div className="spinner" />
+              <div>正在加载 OCR 模型…</div>
+              <div className="placeholder-hint">首次较慢，模型来自 CDN，加载后会缓存</div>
+            </div>
+          ) : modelState === 'failed' ? (
+            <div className="placeholder">
+              <div>模型加载失败，请检查网络后刷新重试。</div>
+            </div>
           ) : (
             <div className="placeholder">
               <div>拖拽图片 / PDF 到此处 · 点击「打开图片 / PDF」· 或直接 Ctrl/⌘+V 粘贴图片</div>
