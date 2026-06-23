@@ -1,0 +1,87 @@
+name: Build Desktop App
+
+# 每次 push 都用 PyInstaller 把 ocr_app 打成各平台的可下载客户端包：
+#   - 日常 push：产物作为 workflow Artifacts 上传（在 Actions 运行页可下载，需登录 GitHub）。
+#   - 打 tag（v*）：额外发布到 GitHub Releases，供下载页的 latest 固定链接直接下载（公网可用）。
+#
+# 产出的资产名与 ocr_web 下载页(src/Download.tsx)中的常量保持一致，改名需同步两处。
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+    paths:
+      - 'ocr_app/**'
+      - '.github/workflows/build-app.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write # 发布 Release 需要写权限
+
+jobs:
+  build:
+    name: Build (${{ matrix.label }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14        # Apple Silicon (arm64)
+            label: macOS Apple Silicon
+            asset: PaddleOCRApp-macos-arm64.zip
+          - os: macos-13        # Intel (x86_64)
+            label: macOS Intel
+            asset: PaddleOCRApp-macos-x64.zip
+          - os: windows-latest
+            label: Windows x64
+            asset: PaddleOCRApp-windows-x64.zip
+          - os: ubuntu-latest
+            label: Linux x64
+            asset: PaddleOCRApp-linux-x64.tar.gz
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: ocr_app
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build with PyInstaller
+        working-directory: ocr_app
+        run: pyinstaller ocr_app.spec --noconfirm
+
+      # ---- 打包成单一可下载文件（各平台压缩方式不同） ----
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        working-directory: ocr_app/dist
+        run: zip -ry "../../${{ matrix.asset }}" "PaddleOCRApp.app"
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path ocr_app/dist/PaddleOCRApp/* -DestinationPath ${{ matrix.asset }} -Force
+
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        working-directory: ocr_app/dist
+        run: tar -czf "../../${{ matrix.asset }}" PaddleOCRApp
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+          retention-days: 30
+
+      - name: Publish to Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.asset }}
+          fail_on_unmatched_files: true

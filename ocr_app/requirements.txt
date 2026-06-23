@@ -1,0 +1,14 @@
+# OCR 推理后端：RapidOCR（PaddleOCR 的 PP-OCR 模型 ONNX 版 + ONNX Runtime）
+# 选用原因见 ocr_app/engine.py 顶部说明：在本机 x86_64(Rosetta) 环境下，
+# paddlepaddle 无法运行当前 PP-OCR 模型，RapidOCR 是可稳定运行的等价方案。
+rapidocr-onnxruntime>=1.4.0
+
+# 桌面 GUI
+PySide6>=6.6.0
+
+# 图像处理
+pillow>=10.0.0
+numpy>=1.24.0
+
+# PDF 渲染（把每页渲染成位图后再做 OCR）
+PyMuPDF>=1.23.0

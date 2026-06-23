@@ -1,0 +1,25 @@
+# ===== 通用 =====
+.DS_Store
+*.local
+
+# ===== ocr_app（Python 桌面客户端）=====
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+# PyInstaller 打包产物
+build/
+ocr_app/build/
+ocr_app/dist/
+PaddleOCRApp-*.zip
+PaddleOCRApp-*.tar.gz
+
+# ===== ocr_web（Vite + React）=====
+node_modules/
+dist/
+dist-ssr/
+.vite/
+.vercel/
+*.tsbuildinfo

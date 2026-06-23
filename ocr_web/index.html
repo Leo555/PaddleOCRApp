@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>在线 OCR · PaddleOCR Web</title>
+    <meta
+      name="description"
+      content="纯浏览器端的 PaddleOCR 在线文字识别，支持中文 / 英文 / 数字，图片不上传服务器。"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <!--
+      PaddleJS（@paddlejs-models/ocr）内置的 emscripten 版 opencv 产物里有一句
+      `typeof Module === 'undefined' && (Module = {})`。这种「隐式赋值给未声明变量」
+      在普通 <script>（非严格模式）下能创建全局变量，但被 Vite 以 ESM（严格模式）
+      加载时会抛 "Module is not defined"。这里用普通脚本提前在全局声明 Module 规避。
+    -->
+    <script>
+      window.Module = window.Module || {};
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
