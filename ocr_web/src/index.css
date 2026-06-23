@@ -199,6 +199,12 @@ button.primary:disabled {
   padding: 40px;
 }
 
+.placeholder-hint {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #6e747d;
+}
+
 .result {
   flex: 2;
   display: flex;
@@ -406,6 +412,12 @@ button.primary:disabled {
   color: var(--green);
   font-size: 12px;
   word-break: break-all;
+}
+.dl-card-size {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  min-height: 16px;
 }
 
 .dl-foot {

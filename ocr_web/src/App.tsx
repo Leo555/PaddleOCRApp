@@ -458,7 +458,10 @@ export default function App() {
             <canvas ref={canvasRef} className="canvas" />
           ) : (
             <div className="placeholder">
-              拖拽图片 / PDF 到此处 · 点击「打开图片 / PDF」· 或直接 Ctrl/⌘+V 粘贴图片
+              <div>拖拽图片 / PDF 到此处 · 点击「打开图片 / PDF」· 或直接 Ctrl/⌘+V 粘贴图片</div>
+              <div className="placeholder-hint">
+                截图识别：用系统截图（macOS ⌃⌘⇧4 / Windows Win+Shift+S）截到剪贴板后，回到本页 Ctrl/⌘+V 粘贴即可
+              </div>
             </div>
           )}
         </section>
