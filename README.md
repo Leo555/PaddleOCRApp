@@ -71,5 +71,7 @@ cd ocr_web && npm install && npm run dev
 
 | 流水线 | 触发 | 作用 |
 |--------|------|------|
-| `build-app.yml` | 每次 push | 用 PyInstaller 在 macOS(arm64/x64) / Windows / Linux 上打包桌面客户端，上传为 Actions Artifacts |
+| `build-app.yml` | 每次 push | 用 PyInstaller 在 macOS(arm64) / Windows / Linux 上打包桌面客户端，上传为 Actions Artifacts |
 | `build-app.yml` | push tag `v*` | 额外发布到 **GitHub Releases**，供下载页固定直链使用 |
+
+> **macOS Intel（x64）不走 CI**：GitHub 免费额度下 `macos-13`（Intel）runner 常排不到机器、长时间 queued 并阻塞发布，故 Intel 包改为在 Apple Silicon Mac 上用 x86_64(Rosetta) Python 本地打包后手动上传 Release，步骤见 [`ocr_app/README.md`](ocr_app/README.md)。

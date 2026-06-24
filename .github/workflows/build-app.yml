@@ -6,8 +6,11 @@ name: Build Desktop App
 #   - 手动触发（workflow_dispatch）：需要临时验证打包时在 Actions 页面点 Run workflow，
 #     产物仅作为 workflow Artifacts 上传（不发布 Release）。
 #
-# 说明：app 构建跨 4 平台（macOS Apple Silicon / macOS Intel / Windows x64 / Linux x64）、
-# 耗时较长，故不在日常 push 自动跑；发版只走 tag，平时验证靠手动触发。
+# 说明：CI 构建 3 平台（macOS Apple Silicon / Windows x64 / Linux x64）、耗时较长，
+# 故不在日常 push 自动跑；发版只走 tag，平时验证靠手动触发。
+# macOS Intel（x64）不在 CI 内构建：GitHub 免费额度下 macos-13(Intel) runner 经常排不到
+# 机器导致 job 长时间 queued，进而阻塞 release。Intel 包改为在 Apple Silicon Mac 上用
+# x86_64(Rosetta) 的 Python 本地打包后手动上传 Release，步骤见 ocr_app/README.md。
 # 产出的资产名与 ocr_web 下载页(src/Download.tsx)中的常量保持一致，改名需同步两处。
 
 on:
@@ -26,9 +29,7 @@ jobs:
           - os: macos-14        # Apple Silicon (arm64)
             label: macOS Apple Silicon
             asset: PaddleOCRApp-macos-arm64.zip
-          - os: macos-13        # Intel (x64)，macos-13 是最后的 Intel runner
-            label: macOS Intel
-            asset: PaddleOCRApp-macos-x64.zip
+          # 注意：macOS Intel(x64) 不在此 matrix 内，改为本地打包手动上传（见文件头说明）。
           - os: windows-latest
             label: Windows x64
             asset: PaddleOCRApp-windows-x64.zip

@@ -67,8 +67,38 @@ pyinstaller ocr_app.spec --noconfirm
 - **macOS**：`dist/PaddleOCRApp.app`
 - **Windows / Linux**：`dist/PaddleOCRApp/` 目录（运行其中的 `PaddleOCRApp` 可执行文件）
 
-> 多平台安装包由 CI 自动构建：每次 push 都会在 macOS(arm64/x64) / Windows / Linux 上打包并上传为 GitHub Actions Artifacts；打 tag（`v*`）时发布到 GitHub Releases。详见仓库根 README 的「持续集成与发布」一节，以及 `.github/workflows/build-app.yml`。
+> 多平台安装包由 CI 自动构建：在 macOS(arm64) / Windows / Linux 上打包并上传为 GitHub Actions Artifacts；打 tag（`v*`）时发布到 GitHub Releases。详见仓库根 README 的「持续集成与发布」一节，以及 `.github/workflows/build-app.yml`。
 > 资产命名（如 `PaddleOCRApp-macos-arm64.zip`）与 Web 下载页 `ocr_web/src/Download.tsx` 中的常量一一对应，**改名需同步两处**。
+
+### macOS Intel（x64）：本地打包后手动上传 Release
+
+Intel 包不在 CI 内构建（`macos-13` runner 常排不到机器、长时间 queued 会阻塞发布）。在 **Apple Silicon Mac** 上即可打出真正的 x64 包——只要用一个 **x86_64（Rosetta）的 Python** 来跑 PyInstaller（PyInstaller 产出的架构 = 运行它的 Python 架构）：
+
+```bash
+cd ocr_app
+
+# 0) 准备 Rosetta（仅首次）：
+softwareupdate --install-rosetta --agree-to-license
+
+# 1) 用 x86_64 的 Python 创建 venv（确认 venv 架构为 x86_64）：
+#    若已有 x86_64 的 .venv 可直接复用；验证：
+#    .venv/bin/python -c "import platform;print(platform.machine())"  # 应输出 x86_64
+arch -x86_64 /path/to/x86_64/python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt pyinstaller
+
+# 2) 打包并核对架构（应为 x86_64）：
+pyinstaller ocr_app.spec --noconfirm
+lipo -archs dist/PaddleOCRApp.app/Contents/MacOS/PaddleOCRApp
+
+# 3) 压成与下载页约定一致的资产名：
+cd dist && zip -ry "../../PaddleOCRApp-macos-x64.zip" "PaddleOCRApp.app" && cd ..
+
+# 4) 上传到对应 tag 的 Release（需已登录 gh）：
+gh release upload v0.1.1 ../PaddleOCRApp-macos-x64.zip --clobber
+```
+
+> 产物 `PaddleOCRApp-macos-x64.zip` 须与 `ocr_web/src/Download.tsx` 的 macOS · Intel 卡片资产名一致。
 
 ## 项目结构
 
