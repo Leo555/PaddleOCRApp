@@ -618,3 +618,136 @@ button.primary:disabled {
 .dl-feedback {
   white-space: nowrap;
 }
+
+/* ===================== 移动端适配 ===================== */
+/* 平板 / 大屏手机：在线 OCR 主区由左右两栏改为上下堆叠，页面整体可滚动。 */
+@media (max-width: 720px) {
+  body {
+    font-size: 13px;
+  }
+
+  /* 允许内容超出视口时整页滚动，而非把两栏挤成细条。 */
+  .app {
+    height: auto;
+    min-height: 100%;
+  }
+
+  .toolbar {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  /* 小屏下不让 spacer 强行换行打散按钮，靠 flex-wrap 自然排布即可。 */
+  .toolbar .spacer {
+    flex-basis: 100%;
+    height: 0;
+  }
+
+  .pager {
+    flex-wrap: wrap;
+    gap: 8px 10px;
+  }
+  .pager-hint {
+    flex-basis: 100%;
+  }
+
+  .content {
+    flex-direction: column;
+    padding: 10px 12px;
+    gap: 12px;
+  }
+  .viewer {
+    flex: none;
+    min-height: 44vh;
+  }
+  .result {
+    flex: none;
+    min-width: 0;
+  }
+  /* 结果栏按钮整体换行、单个按钮文字不折行，避免「复制」竖排 */
+  .result-bar {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .result-bar button {
+    white-space: nowrap;
+    padding: 6px 12px;
+  }
+  .text {
+    min-height: 220px;
+  }
+
+  .statusbar {
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding: 8px 12px;
+  }
+
+  /* 下载页：收紧留白，标题与面板更贴合窄屏 */
+  .dl-main {
+    padding: 28px 16px 40px;
+  }
+  .dl-hero {
+    margin-bottom: 26px;
+  }
+  .dl-hero-title {
+    font-size: 24px;
+  }
+  .dl-hero-sub {
+    font-size: 14px;
+  }
+  .dl-panel {
+    padding: 18px 16px;
+  }
+  .dl-os-tab {
+    padding: 10px 16px;
+  }
+}
+
+/* 小屏手机：进一步压缩，主按钮与文件信息整行排布。 */
+@media (max-width: 480px) {
+  .title {
+    font-size: 15px;
+  }
+  .dl-hero-title {
+    font-size: 21px;
+  }
+
+  /* OS tab 平铺占满一行，点击区域更大更好按 */
+  .dl-os-tabs {
+    gap: 8px;
+  }
+  .dl-os-tab {
+    flex: 1 1 0;
+    justify-content: center;
+    padding: 11px 8px;
+  }
+
+  /* 下载按钮与文件信息纵向排列，按钮拉满宽度 */
+  .dl-download {
+    align-items: stretch;
+    gap: 12px;
+  }
+  .dl-btn-primary {
+    justify-content: center;
+    width: 100%;
+  }
+  .dl-arch {
+    display: flex;
+  }
+  .dl-arch button {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* 弹窗适配窄屏，留出左右边距 */
+  .modal {
+    width: auto;
+    max-width: calc(100vw - 32px);
+  }
+
+  .dl-links {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
