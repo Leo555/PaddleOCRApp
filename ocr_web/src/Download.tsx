@@ -200,13 +200,19 @@ export default function Download({ onBack }: { onBack: () => void }) {
     };
   }, []);
 
-  // 计算「推荐」的那一项资产名。
-  const recommended = useMemo<string | null>(() => {
-    if (os === 'windows') return 'PaddleOCRApp-windows-x64.zip';
-    if (os === 'linux') return 'PaddleOCRApp-linux-x64.tar.gz';
-    if (os === 'mac') return 'PaddleOCRApp-macos-arm64.zip';
-    return null;
-  }, [os]);
+  // 根据检测到的系统给出「推荐」的 tab（unknown 时不推荐）。
+  const recommendedOs = useMemo<PlatformOS | null>(
+    () => (os === 'unknown' ? null : os),
+    [os],
+  );
+
+  // 当前选中平台（含 macOS 架构）对应的构建包。
+  const currentBuild = useMemo<Build>(() => {
+    if (selectedOs === 'mac') {
+      return BUILDS.find((b) => b.os === 'mac' && b.arch === macArch) ?? BUILDS[0];
+    }
+    return BUILDS.find((b) => b.os === selectedOs) ?? BUILDS[0];
+  }, [selectedOs, macArch]);
 
   const osLabel =
     os === 'mac' ? 'macOS' : os === 'windows' ? 'Windows' : os === 'linux' ? 'Linux' : '未知系统';
