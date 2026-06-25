@@ -4,11 +4,28 @@
 // - PaddleJS 只能识别图片，PDF 需先栅格化成像素。这里把每页渲染到 canvas。
 // - 渲染倍率 scale 影响识别清晰度：太小文字糊、太大太慢且占内存。默认 2x，
 //   再按页面尺寸把渲染结果限制在 MAX_SIDE 以内，避免超大页面把内存撑爆。
-import * as pdfjsLib from 'pdfjs-dist';
-// Vite 推荐用 ?url 拿到 worker 的最终构建地址，避免 ESM worker 解析问题。
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import type * as PdfjsNs from 'pdfjs-dist';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
+/**
+ * 懒加载 pdfjs：仅在用户真正上传 PDF 时才拉取主库与 worker。
+ * pdfjs 主库 + worker（约 1.3MB）不进首屏 bundle，纯图片识别用户零成本。
+ * 只初始化一次，后续调用复用同一 Promise。
+ */
+let pdfjsPromise: Promise<typeof import('pdfjs-dist')> | null = null;
+function loadPdfjs(): Promise<typeof import('pdfjs-dist')> {
+  if (!pdfjsPromise) {
+    pdfjsPromise = (async () => {
+      const lib = await import('pdfjs-dist');
+      // Vite 推荐用 ?url 拿到 worker 的最终构建地址，避免 ESM worker 解析问题。
+      const { default: workerUrl } = await import(
+        'pdfjs-dist/build/pdf.worker.min.mjs?url'
+      );
+      lib.GlobalWorkerOptions.workerSrc = workerUrl;
+      return lib;
+    })();
+  }
+  return pdfjsPromise;
+}
 
 /** 单页渲染后的位图最长边上限，与 ocr.ts 的下采样阈值保持一致。 */
 const MAX_SIDE = 2048;
@@ -55,7 +72,8 @@ export async function renderPdf(
   // 每次都重新读取 arrayBuffer：getDocument 会把 buffer 转移给 worker 而置空，
   // 输错密码重试时必须拿到一份新的 buffer，否则会因 detached 而失败。
   const buf = await file.arrayBuffer();
-  let doc: pdfjsLib.PDFDocumentProxy;
+  const pdfjsLib = await loadPdfjs();
+  let doc: PdfjsNs.PDFDocumentProxy;
   try {
     doc = await pdfjsLib.getDocument({ data: buf, password }).promise;
   } catch (err: any) {

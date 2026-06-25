@@ -5,7 +5,11 @@
  * 通过 PaddleJS（WebGL）在浏览器里推理。模型从官方 CDN 拉取，识别全程在本地完成，
  * 图片不会上传到任何服务器。
  */
-import * as ocrModel from '@paddlejs-models/ocr';
+// 动态加载：@paddlejs-models/ocr 含约 905KB 内联 WASM，静态引入会让首屏 bundle
+// 膨胀到 2MB。改为首次 initOcr() 时按需加载，Vite 会自动拆成独立 chunk——
+// 下载页等无需 OCR 的场景零成本，OCR 页则与模型下载并行加载、用户基本无感。
+type OcrModule = typeof import('@paddlejs-models/ocr');
+let ocrModule: OcrModule | null = null;
 
 export interface OcrLine {
   text: string;
@@ -26,13 +30,17 @@ let initPromise: Promise<void> | null = null;
 export function initOcr(): Promise<void> {
   if (initialized) return Promise.resolve();
   if (!initPromise) {
-    initPromise = ocrModel
-      .init()
+    initPromise = import('@paddlejs-models/ocr')
+      .then((mod) => {
+        ocrModule = mod;
+        return mod.init();
+      })
       .then(() => {
         initialized = true;
       })
       .catch((err) => {
         initPromise = null; // 失败后允许重试
+        ocrModule = null;
         throw err;
       });
   }
@@ -110,8 +118,9 @@ export async function recognize(
     }
   }
 
+  if (!ocrModule) throw new Error('OCR 模型尚未初始化');
   const start = performance.now();
-  const res = await ocrModel.recognize(input);
+  const res = await ocrModule.recognize(input);
   const elapsed = (performance.now() - start) / 1000;
 
   const texts: string[] = Array.isArray(res?.text)
