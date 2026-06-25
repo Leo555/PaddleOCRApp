@@ -18,7 +18,7 @@ function sourceSize(src: Source): { w: number; h: number } {
 
 export default function App() {
   const [modelState, setModelState] = useState<ModelState>('loading');
-  const [status, setStatus] = useState('正在加载 OCR 模型（首次较慢，模型来自 CDN）…');
+  const [status, setStatus] = useState('正在加载并初始化 OCR 模型（首次较慢：先从 CDN 下载，再做 WebGL 预热）…');
   const [busy, setBusy] = useState(false);
   const [lines, setLines] = useState<OcrLine[]>([]);
   const [text, setText] = useState('');
@@ -461,8 +461,10 @@ export default function App() {
             // 没有提示用户会以为页面卡住。
             <div className="placeholder loading-box">
               <div className="spinner" />
-              <div>正在加载 OCR 模型…</div>
-              <div className="placeholder-hint">首次较慢，模型来自 CDN，加载后会缓存</div>
+              <div>正在加载并初始化 OCR 模型…</div>
+              <div className="placeholder-hint">
+                首次较慢：先从 CDN 下载模型，再做 WebGL 预热（编译着色器），加载后会缓存
+              </div>
             </div>
           ) : modelState === 'failed' ? (
             <div className="placeholder">

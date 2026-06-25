@@ -26,23 +26,46 @@ export interface OcrResult {
 let initialized = false;
 let initPromise: Promise<void> | null = null;
 
-/** 加载模型（幂等）。首次调用会从 CDN 下载模型，耗时较长。 */
+/**
+ * init 超时上限。init() 分两段：①下载 model.json/chunk 权重；②WebGL 预热
+ * （上传纹理、编译着色器、跑一次空推理）。第②段无网络请求，弱机/集显上可达
+ * 十几秒——这正是「网络都 200 了还在转圈」的原因。但若 WebGL 异常（context
+ * lost、GPU 进程崩）init() 会永久 hang、UI 永远转圈也不报错。设一个宽松上限
+ * 兜底：超时则 reject，让上层切到失败态引导用户刷新，而非无限等待。
+ */
+const INIT_TIMEOUT_MS = 120_000;
+
+/** 加载模型（幂等）。首次调用会从 CDN 下载模型并做 WebGL 预热，耗时较长。 */
 export function initOcr(): Promise<void> {
   if (initialized) return Promise.resolve();
   if (!initPromise) {
-    initPromise = import('@paddlejs-models/ocr')
-      .then((mod) => {
-        ocrModule = mod;
-        return mod.init();
-      })
-      .then(() => {
-        initialized = true;
-      })
-      .catch((err) => {
-        initPromise = null; // 失败后允许重试
-        ocrModule = null;
-        throw err;
+    initPromise = (async () => {
+      const mod = await import('@paddlejs-models/ocr');
+      ocrModule = mod;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const timeout = new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(
+                '模型初始化超时（网络较慢或设备性能受限），请刷新页面重试',
+              ),
+            ),
+          INIT_TIMEOUT_MS,
+        );
       });
+      try {
+        // init() 包含下载 + WebGL 预热；与超时竞速，任一先结算即返回。
+        await Promise.race([mod.init(), timeout]);
+      } finally {
+        clearTimeout(timer);
+      }
+      initialized = true;
+    })().catch((err) => {
+      initPromise = null; // 失败/超时后允许重试
+      ocrModule = null;
+      throw err;
+    });
   }
   return initPromise;
 }
