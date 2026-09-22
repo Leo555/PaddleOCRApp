@@ -1,13 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import App from './App';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
+    {/* Analytics 上报流量/访问数据，SpeedInsights 上报真实用户性能数据（LCP/FCP/CLS/TTFB）。 */}
     <Analytics />
+    <SpeedInsights />
   </React.StrictMode>,
 );
 

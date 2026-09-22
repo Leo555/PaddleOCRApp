@@ -12,6 +12,7 @@
   "dependencies": {
     "@paddlejs-models/ocr": "^1.2.4",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "pdfjs-dist": "^4.10.38",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
